@@ -13,9 +13,8 @@
 LedControl lc = LedControl(12, 11, 10, 4);
 
 /* we always wait a bit between updates of the display */
-unsigned long delaytime = 10;
-byte m1[16], m2[8];
-//int devices::getDeviceCount();
+unsigned long delaytime = 1000;
+byte shape[16], background[16], graphics[16];
 
 void setup() {
   /*
@@ -30,18 +29,20 @@ void setup() {
     lc.clearDisplay(i);
   }
   for (int i = 0; i < 16; ++i) {
-    m1[i] = 0;
-    //m2[i] = 0;
+    shape[i] = 0;
+    background[i] = 0;
+    graphics[i] = 0;
   }
-  m1[7] = B01000000;
-  m1[6] = B11100000;
+  //0 is top of the screen
+  shape[0] = B01000000;
+  shape[1] = B11100000;
 }
 
 void updateGraphics() {
-  for (int i = 2; i <4; ++i) {
+  for (int i = 2; i < 4; ++i) {
     for (int j = 0; j < 8; ++j) {
-      lc.setColumn(i, j, m1[j+8*(i-2)]);
-      lc.setColumn(i, j,m1[j+8*(i-2)]);
+      byte b = shape[8 * (i - 1) - 1 - j] | background[8 * (i - 1) - 1 - j];
+      lc.setColumn(i, j, b);
     }
   }
 }
@@ -123,16 +124,21 @@ void single() {
       c1 = 7;
       continue;
     }
-
   }
-
-
 }
-
+void shiftShape() {
+  for (int i = 15; i > 0; --i) {
+    shape[i] = shape[i - 1];
+    //Serial.print(shape[i]);
+  }
+  shape[0] = 0;
+}
 void loop() {
   //writeArduinoOnMatrix();
   //rows();
   //columns();
   updateGraphics();
+  shiftShape();
+  delay(delaytime);
   //single();
 }
