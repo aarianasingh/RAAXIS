@@ -1,5 +1,7 @@
 #include "LedControl.h"
 LedControl lc=LedControl(12,11,10,4);
+byte s[5]; //help
+
 void setup() {
   // put your setup code here, to run once:
   lc.shutdown(0,false);
@@ -8,26 +10,27 @@ void setup() {
   /* and clear the display */
   lc.clearDisplay(0);
 
-  byte [] s = new byte [5]; //help
+  
   //The shapes can all be draw in a 4x2 grid. The first 4 bits represent the top column, last 4 bits represent the bottom column.
-  s[0]= B01001110;
+  s[0]= B01001110; 
   s[1]= B11001100;
   s[2]= B01101100; 
   s[3]= B11100010; 
-  s[4]= B11110000};
+  s[4]= B11110000;
   randomSeed(analogRead(0));//insert pin number that is unconnected!;
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
   int addr = 0;
-  bool placed = false;
+  bool placed = true;
   
   if (placed)
   {
     byte shape = generateShape();
     lc.setColumn (addr, 0, topCol(shape));
     lc.setColumn (addr, 1, bottomCol(shape));
+    delay (1000);
   }
 
 }
@@ -40,14 +43,12 @@ byte generateShape () {
 byte topCol (byte shape){
   shape = shape >> 4;
   shape = shape << 4;
+  shape = shape >> 2;
   return shape;
 }
 
 byte bottomCol (byte shape){
   shape = shape << 4;
-  shape = shape >> 4;
+  shape = shape >> 2;
   return shape;
 }
-
-
-
