@@ -1,2 +1,2 @@
-# RAAXIS
+# RAXXIS
 SE101 project
