@@ -38,7 +38,7 @@ void setup() {
   shape[0] = B01000000;
   shape[1] = B11100000;
 
-  //The shapes can all be draw in a 4x2 grid. The first 4 bits represent the top column, last 4 bits represent the bottom column.
+  //The shapes can all be draw in a 5x2 grid. The first 4 bits represent the top column, last 4 bits represent the bottom column.
   s[0] = B01001110;
   s[1] = B11001100;
   s[2] = B01101100;
@@ -87,7 +87,7 @@ void moveRight() {
   //moving to the right
   for (int i = 15; i >= 0; i--)
   {
-    if (!(((shape[i]) && B00000001) == 00000000)) //checks if shift causes it to reach a wall
+    if (!(((shape[i])& B00000001) == 00000000)) //checks if shift causes it to reach a wall
     {
       check_shape_shift = 0;
       break;
@@ -100,7 +100,7 @@ void moveRight() {
     }
 }
 
-void wipeShapeMatrix(){
+void wipeShapeMatrix() {
   for (int i = 15; i > 0; --i) {
     shape[i] = 0;
   }
@@ -108,20 +108,20 @@ void wipeShapeMatrix(){
 
 void loop() {
   int addr = 0;
-  int counter =1;
+  int counter = 1;
   bool placed = true;
 
   /*if (counter%16==0)
-  {
+    {
     byte rShape = generateShape();
     wipeShapeMatrix();
     shape[0] = topCol(rShape);
     shape[1] = bottomCol(rShape);
     delay (1000);
-  }*/
+    }*/
   updateGraphics();
-  moveDown();
-  delay(delaytime);
+  //moveDown();
+  //delay(delaytime);
   moveRight();
   delay(delaytime);
   ++counter;
