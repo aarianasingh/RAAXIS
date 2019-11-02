@@ -40,8 +40,8 @@ void setup() {
     background[i] = 0;
   }
   //0 is top of the screen, set shape at top
-  shape[0] = B00010000;
-  shape[1] = B00111000;
+  shape[0] = B00110000;
+  shape[1] = B00110000;
 
   //The shapes can all be draw in a 5x2 grid. The first 4 bits represent the top column, last 4 bits represent the bottom column.
   s[0] = B01001110;
@@ -159,6 +159,7 @@ void clearRows() {
       {
         background[k] = background[k - 1];
       }
+      ++i;
       background[0] = 0;
       player_score++;
     }
@@ -177,7 +178,7 @@ void clearRows() {
     player_score++;
   }
   }
-}*/
+  }*/
 //clears the shape matrix and places the newly generated shape at the begining of the shape matrix
 //should call random generate shape function and change the shape
 void Place_Shape()
