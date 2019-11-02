@@ -152,19 +152,7 @@ void placeShape() {
   }
 }
 void clearRows() {
-  int i = 15;
-  while (background[i] == B11111111) {
-    --i;
-  }
-  int diff = 15 - i;
-  for (int j = i; j >= 0; --j) {
-    background[j + diff] = background[j];
-  }
-  for (int j = 0; j < diff; ++j) {
-    background[j] = 0;
-  }
-
-  /*for (int i = 15; i >= 0; --i) {
+  for (int i = 15; i >= 0; --i) {
     if (background[i] == B11111111)
     {
       for (int k = i; k > 0; k--) //moves the rows above cleard line down
@@ -174,8 +162,22 @@ void clearRows() {
       background[0] = 0;
       player_score++;
     }
-    }*/
+  }
 }
+
+
+/*for (int i = 15; i >= 0; --i) {
+  if (background[i] == B11111111)
+  {
+    for (int k = i; k > 0; k--) //moves the rows above cleard line down
+    {
+      background[k] = background[k - 1];
+    }
+    background[0] = 0;
+    player_score++;
+  }
+  }
+}*/
 //clears the shape matrix and places the newly generated shape at the begining of the shape matrix
 //should call random generate shape function and change the shape
 void Place_Shape()
@@ -208,7 +210,7 @@ void loop() {
   int counter = 0;
 
   while (game_state) {
-      updateGraphics();
+    updateGraphics();
     int rightButtonState = digitalRead(rightButton);
     int leftButtonState = digitalRead(leftButton);
 
