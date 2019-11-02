@@ -1,6 +1,7 @@
 
 //We always have to include the library
 #include "LedControl.h"
+const int rightButton = 4; 
 
 /*
   Now we need a LedControl to work with.
@@ -30,6 +31,9 @@ void setup() {
     /* and clear the display */
     lc.clearDisplay(i);
   }
+
+  pinMode (rightButton, INPUT);
+  
   for (int i = 0; i < 16; ++i) {
     shape[i] = 0;
     background[i] = 0;
@@ -80,6 +84,7 @@ void moveDown() {
     //Serial.print(shape[i]);
   }
   shape[0] = 0;
+  delay(delaytime);
 }
 void moveRight() {
   byte check_shape_shift = 1;
@@ -111,6 +116,15 @@ void loop() {
   int counter = 1;
   bool placed = true;
 
+  int rightButtonState = digitalRead(rightButton);
+
+  if (rightButtonState == LOW) {
+   lc.setRow(0,0,B10000000);
+  }
+  else {
+    lc.setRow(0,0,B00000000);
+  }
+  
   /*if (counter%16==0)
     {
     byte rShape = generateShape();
@@ -120,10 +134,10 @@ void loop() {
     delay (1000);
     }*/
   updateGraphics();
-  //moveDown();
-  //delay(delaytime);
+  moveDown();
+
   moveRight();
-  delay(delaytime);
+  //delay(delaytime);
   ++counter;
 }
 
