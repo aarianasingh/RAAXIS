@@ -1,7 +1,7 @@
 
 //We always have to include the library
 #include "LedControl.h"
-const int rightButton = 4; 
+const int rightButton = 4;
 
 /*
   Now we need a LedControl to work with.
@@ -15,8 +15,9 @@ LedControl lc = LedControl(12, 11, 10, 4);
 
 /* we always wait a bit between updates of the display */
 unsigned long delaytime = 500;
-byte shape[16], background[16];
-
+int player_score = 0; //keeps track of the players score
+byte game_state = 1; //check if game is over
+byte shape[17], background[17];
 byte s[6]; //help
 
 void setup() {
@@ -24,6 +25,7 @@ void setup() {
     The MAX72XX is in power-saving mode on startup,
     we have to do a wakeup call
   */
+  background[16] = B11111111; // initialised to 1 to indicate the end row of the matrix
   for (int i = 0; i < 4; ++i) {
     lc.shutdown(i, false);
     /* Set the brightness to a medium values */
@@ -33,7 +35,7 @@ void setup() {
   }
 
   pinMode (rightButton, INPUT);
-  
+
   for (int i = 0; i < 16; ++i) {
     shape[i] = 0;
     background[i] = 0;
@@ -86,6 +88,24 @@ void moveDown() {
   shape[0] = 0;
   delay(delaytime);
 }
+void moveLeft() {
+  byte check_shape_shift = 1;
+
+  //moving to the left
+  for (int i = 15; i >= 0; i--)
+  {
+    if ((((shape[i])&B10000000) != 00000000) || (((shape[i] << 1)&background[i + 1]) != B00000000)) //checks if shift causes it to reach a wall change + to minus if array is reversed
+    {
+      check_shape_shift = 0;
+      break;
+    }
+  }
+  if (check_shape_shift == 1)
+    for (int i = 15; i >= 0; --i) {
+      shape[i] = shape[i] << 1;
+    }
+}//end of method
+
 void moveRight() {
   byte check_shape_shift = 1;
 
@@ -103,28 +123,66 @@ void moveRight() {
       shape[i] = shape[i] >> 1;
       //Serial.print(shape[i]);
     }
-}
+}//end of method
 
 void wipeShapeMatrix() {
   for (int i = 15; i > 0; --i) {
     shape[i] = 0;
   }
-}
+}//end of method
+
+void Place_Shape()
+{
+
+  byte check_place_shape = 1;
+  for (int i = 15; i >= 0; i--)
+  {
+    if (((shape[i]& background[i + 1]) != B00000000)) //checks if shift causes it to reach a shape or the end row
+    {
+      check_place_shape = 0;
+
+      break;
+    }
+  }
+  if (check_place_shape == 0)
+  {
+    for (int i = 15; i >= 0; --i) {
+
+      background[i] = background[i] | shape[i];
+      if (background[i] == B11111111)
+      {
+        for (int k = i; k > 0; k--) //moves the rows above cleard line down
+        {
+          background[k] = background[k - 1];
+        }
+        background[0] = 0;
+        player_score++;
+      }
+
+      if (background[0] != B00000000) game_state = 0;
+
+    }
+
+    //clears the shape matrix and places the newly generated shape at the begining of the shape matrix
+    //should call random generate shape function and change the shape
+
+  }
+}//end of method
 
 void loop() {
-  int addr = 0;
-  int counter = 1;
+  //int addr = 0;
+  // int counter = 1;
   bool placed = true;
 
   int rightButtonState = digitalRead(rightButton);
 
   if (rightButtonState == LOW) {
-   lc.setRow(0,0,B10000000);
+    lc.setRow(0, 0, B10000000);
   }
   else {
-    lc.setRow(0,0,B00000000);
+    lc.setRow(0, 0, B00000000);
   }
-  
+
   /*if (counter%16==0)
     {
     byte rShape = generateShape();
@@ -136,9 +194,14 @@ void loop() {
   updateGraphics();
   moveDown();
 
+  moveLeft();
+  Place_Shape();
+  moveRight();
+  Place_Shape();
+
   moveRight();
   //delay(delaytime);
-  ++counter;
+  //++counter;
 }
 
 /*
