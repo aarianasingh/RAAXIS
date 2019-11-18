@@ -225,7 +225,7 @@ void moveLeft() {
   {
 
     //try removing plus 1
-    if ((((shape[i])&B10000000) != 00000000) || (((shape[i] << 1)&background[i + 1]) != B00000000)) //checks if shift causes it to reach a wall change + to minus if array is reversed
+    if ((((shape[i])&B10000000) != 00000000) || (((shape[i] << 1)&background[i]) != B00000000)) //checks if shift causes it to reach a wall change + to minus if array is reversed
     {
       check_shape_shift = 0;
       break;
@@ -244,7 +244,7 @@ void moveRight() {
   //moving to the right
   for (int i = 15; i >= 0; i--)
   {
-    if (!(((shape[i])& B00000001) == 00000000)) //checks if shift causes it to reach a wall
+    if ((((shape[i])&B00000001) != 00000000) || (((shape[i] >> 1)&background[i]) != B00000000)) //checks if shift causes it to reach a wall
     {
       check_shape_shift = 0;
       break;
