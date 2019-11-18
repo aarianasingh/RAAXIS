@@ -1,7 +1,9 @@
 //We always have to include the library
 #include "LedControl.h"
-const int rightButton = 4;
-const int leftButton = 3;
+const int rightButton = 7;
+const int leftButton = 6;
+const int rotateButton = 5;
+const int moveFaster = 4;
 /*
   Now we need a LedControl to work with.
  ***** These pin numbers will probably not work with your hardware *****
@@ -12,12 +14,20 @@ const int leftButton = 3;
 */
 LedControl lc = LedControl(12, 11, 10, 4);
 
+/*
+   todo: CHANGE RANDOM SHAPE GEN
+         CHANGE GRAPHICS DISPLAY
+         CHANGE INITIAL SHAPE STORAGE
+         SQUASH WEIRD MERGING BUG
+*/
+
 /* we always wait a bit between updates of the display */
 unsigned long delaytime = 500;
 int player_score = 0; //keeps track of the players score
+int x = 0, y = 0, rotation = 0, typeShape = 0;
 byte game_state = 1; //check if game is over
 byte shape[17], background[17];
-byte s[6]; //help
+byte s[7][8];
 
 void setup() {
   /*
@@ -35,27 +45,144 @@ void setup() {
 
   pinMode (rightButton, INPUT);
   pinMode (leftButton, INPUT);
+  pinMode (rotateButton, INPUT);
+  pinMode (moveFaster, INPUT);
+
+
   for (int i = 0; i < 16; ++i) {
     shape[i] = 0;
     background[i] = 0;
   }
   //0 is top of the screen, set shape at top
-  shape[0] = B00110000;
-  shape[1] = B00110000;
+  shape[0] = B00010000;
+  shape[1] = B00111000;
+  x = 3;
+  y = 1;
+  rotation  = 0;
+  typeShape = 6;
 
-  //The shapes can all be draw in a 5x2 grid. The first 4 bits represent the top column, last 4 bits represent the bottom column.
-  s[0] = B01001110;
-  s[1] = B11001100;
-  s[2] = B01101100;
-  s[3] = B11100010;
-  s[4] = B11110000;
-  s[5] = B11000110;
+  //square/smashboy initialization -1
+  for (int i = 0; i < 4; i += 2) {
+    s[0][i] = B11001100;
+    s[0][i + 1] = B00000000;
+  }
+
+  //cleveland z initialization -5
+
+  s[1][0] = B00001100;
+  s[1][1] = B01100000;
+  s[1][2] = B01001100;
+  s[1][3] = B10000000;
+  s[1][4] = B11000110;
+  s[1][5] = B00000000;
+  s[1][6] = B00100110;
+  s[1][7] = B01000000;
+
+  //rhode island z initialization
+
+  s[2][0] = B00000110;
+  s[2][1] = B11000000;
+  s[2][2] = B10001100;
+  s[2][3] = B01000000;
+  s[2][4] = B01101100;
+  s[2][5] = B00000000;
+  s[2][6] = B01000110;
+  s[2][7] = B00100000;
+
+  //orange ricky
+  s[3][0] = B00101110;
+  s[3][1] = B00000000;
+  s[3][2] = B01000100;
+  s[3][3] = B01100000;
+  s[3][4] = B00001110;
+  s[3][5] = B10000000;
+  s[3][6] = B11000100;
+  s[3][7] = B01000000;
+
+  //blue ricky
+  s[4][0] = B10001110;
+  s[4][1] = B00000000;
+  s[4][2] = B01100100;
+  s[4][3] = B01000000;
+  s[4][4] = B00001110;
+  s[4][5] = B00100000;
+  s[4][6] = B01000100;
+  s[4][7] = B11000000;
+
+  //hero
+  s[5][0] = B00001111;
+  s[5][1] = B00000000;
+  s[5][2] = B01000100;
+  s[5][3] = B01000100;
+  s[5][4] = B00001111;
+  s[5][5] = B00000000;
+  s[5][6] = B01000100;
+  s[5][7] = B00001111;
+
+  //teewee
+  s[6][0] = B01001110;
+  s[6][1] = B00000000;
+  s[6][2] = B01000110;
+  s[6][3] = B01000000;
+  s[6][4] = B00001110;
+  s[6][5] = B01000000;
+  s[6][6] = B01001100;
+  s[6][7] = B01000000;
+
   randomSeed(analogRead(0));//insert pin number that is unconnected!;
 }
 
-byte generateShape () {
-  int rand = random(0, 6);
-  return s[rand];
+void rotate() {
+  ++rotation;
+  rotation = rotation % 4;
+  int count = 0;
+  if (x == 0) x = 1;
+  else if (x == 7) x = 6;
+  int shift = x - 3;
+  //need bit shifting and right/left detection
+  for (int i = y - 1; (i <= y + 2) && (i < 16); ++i) {
+    int num = rotation * 2 + (count / 2);
+    if (count % 2 == 0) {
+      shape[i] = bitshiftRotate(topCol(s[typeShape][num]), shift, shift);
+    } else {
+      shape[i] = bitshiftRotate(bottomCol(s[typeShape][num]), shift, shift);
+    }
+    ++count;
+  }
+}
+
+//helper method for rotate()
+byte bitshiftRotate(byte row, int howmuch, int leftOrRight) {
+  if (leftOrRight == 0) {
+    return row;
+  }
+  int shifty = howmuch;
+  if(howmuch<0)
+    shifty = shifty *-1;
+  for (int i = 0; i < shifty; ++i) {
+    //left shift
+    if (leftOrRight < 0) {
+      row = row << 1;
+      //right shift
+    } else if (leftOrRight > 0) {
+      row = row >> 1;
+    }
+  }
+  return row;
+}
+
+
+void generateShape () {
+  int rand = random(0, 7);
+  int orientation = random(0, 4);
+  shape[0] = topCol(s[rand][orientation * 2]);
+  shape[1] = bottomCol(s[rand][orientation * 2]);
+  shape[2] = topCol(s[rand][orientation * 2 + 1]);
+  shape[3] = bottomCol(s[rand][orientation * 2 + 1]);
+  x = 3;
+  y = 1;
+  rotation  = orientation;
+  typeShape = rand;
 }
 
 byte topCol (byte rShape) {
@@ -85,6 +212,7 @@ void moveDown() {
     //Serial.print(shape[i]);
   }
   shape[0] = 0;
+  ++y;
   //delay(delaytime);
 }
 void moveLeft() {
@@ -93,18 +221,21 @@ void moveLeft() {
   //moving to the left
   for (int i = 15; i >= 0; i--)
   {
+
+    //try removing plus 1
     if ((((shape[i])&B10000000) != 00000000) || (((shape[i] << 1)&background[i + 1]) != B00000000)) //checks if shift causes it to reach a wall change + to minus if array is reversed
     {
       check_shape_shift = 0;
       break;
     }
   }
-  if (check_shape_shift == 1)
+  if (check_shape_shift == 1) {
     for (int i = 15; i >= 0; --i) {
       shape[i] = shape[i] << 1;
     }
-}//end of method
-
+    --x;
+  }//end of method
+}
 void moveRight() {
   byte check_shape_shift = 1;
 
@@ -122,6 +253,7 @@ void moveRight() {
       shape[i] = shape[i] >> 1;
       //Serial.print(shape[i]);
     }
+  ++x;
 }//end of method
 
 void wipeShapeMatrix() {
@@ -193,9 +325,7 @@ void Place_Shape()
 
     if (background[0] == B00000000 || background[1] == B00000000)
     {
-      byte rShape = generateShape();
-      shape[0] = topCol(rShape);
-      shape[1] = bottomCol(rShape);
+      generateShape();
     }
     else {
       game_state = 0;
@@ -214,6 +344,8 @@ void loop() {
     updateGraphics();
     int rightButtonState = digitalRead(rightButton);
     int leftButtonState = digitalRead(leftButton);
+    int rotateButtonState = digitalRead(rotateButton);
+    int moveFasterState = digitalRead(moveFaster);
 
     if (rightButtonState == LOW) {
       //lc.setRow(0, 0, B10000000);
@@ -223,8 +355,16 @@ void loop() {
       //lc.setRow(0, 0, B00000001);
       moveLeft();
     }
-    if (counter % 5 == 0) {
+    if (moveFasterState == LOW) {
       moveDown();
+      }
+      else {
+      if (counter % 5 == 0) {
+        moveDown();
+      }
+      }
+    if (rotateButtonState == LOW) {
+      rotate();
     }
     Place_Shape();
 
