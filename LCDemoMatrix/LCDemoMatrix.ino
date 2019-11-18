@@ -43,6 +43,7 @@ void setup() {
     lc.clearDisplay(i);
   }
 
+  Serial.begin(9600);
   pinMode (rightButton, INPUT);
   pinMode (leftButton, INPUT);
   pinMode (rotateButton, INPUT);
@@ -62,7 +63,7 @@ void setup() {
   typeShape = 6;
 
   //square/smashboy initialization -1
-  for (int i = 0; i < 4; i += 2) {
+  for (int i = 0; i < 8; i += 2) {
     s[0][i] = B11001100;
     s[0][i + 1] = B00000000;
   }
@@ -117,7 +118,7 @@ void setup() {
   s[5][4] = B00001111;
   s[5][5] = B00000000;
   s[5][6] = B01000100;
-  s[5][7] = B00001111;
+  s[5][7] = B01000100;
 
   //teewee
   s[6][0] = B01001110;
@@ -183,6 +184,7 @@ void generateShape () {
   y = 1;
   rotation  = orientation;
   typeShape = rand;
+  Serial.print("generated");
 }
 
 byte topCol (byte rShape) {
@@ -322,7 +324,7 @@ void Place_Shape()
     placeShape();
     clearRows();
     wipeShapeMatrix();
-
+    Serial.print("place_shape called");
     if (background[0] == B00000000 || background[1] == B00000000)
     {
       generateShape();
@@ -346,7 +348,7 @@ void loop() {
     int leftButtonState = digitalRead(leftButton);
     int rotateButtonState = digitalRead(rotateButton);
     int moveFasterState = digitalRead(moveFaster);
-
+    Serial.begin(9600);
     if (rightButtonState == LOW) {
       //lc.setRow(0, 0, B10000000);
       moveRight();
