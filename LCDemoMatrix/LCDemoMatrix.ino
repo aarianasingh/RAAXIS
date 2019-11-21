@@ -43,6 +43,7 @@ void setup() {
     lc.clearDisplay(i);
   }
 
+  //for debugging
   Serial.begin(9600);
   pinMode (rightButton, INPUT);
   pinMode (leftButton, INPUT);
@@ -50,17 +51,17 @@ void setup() {
   pinMode (moveFaster, INPUT);
 
 
+  //shape initialization
   for (int i = 0; i < 16; ++i) {
     shape[i] = 0;
     background[i] = 0;
   }
   //0 is top of the screen, set shape at top
-  shape[0] = B00010000;
-  shape[1] = B00111000;
+  shape[0] = B00110000;
+  shape[1] = B00110000;
   x = 3;
   y = 1;
   rotation  = 0;
-  typeShape = 6;
 
   //square/smashboy initialization -1
   for (int i = 0; i < 8; i += 2) {
@@ -134,21 +135,48 @@ void setup() {
 }
 
 void rotate() {
-  ++rotation;
-  rotation = rotation % 4;
-  int count = 0;
-  if (x == 0) x = 1;
-  else if (x == 7) x = 6;
-  int shift = x - 3;
-  //need bit shifting and right/left detection
-  for (int i = y - 1; (i <= y + 2) && (i < 16); ++i) {
-    int num = rotation * 2 + (count / 2);
-    if (count % 2 == 0) {
-      shape[i] = bitshiftRotate(topCol(s[typeShape][num]), shift, shift);
-    } else {
-      shape[i] = bitshiftRotate(bottomCol(s[typeShape][num]), shift, shift);
+  if (typeShape != 0) {
+    //change rotation type
+    ++rotation;
+    //make sure the range is within 0-3
+    rotation = rotation % 4;
+    int count = 0;
+    //if the pivot point is at the corners,
+    //move it over by one
+    if (x == 0) x = 1;
+    else if (x == 7) x = 6;
+    int shift = x - 3;
+    int canRotate = 1;
+    byte row = B00000000;
+
+    //check if can rotate
+    for (int i = y - 1; (i <= y + 2) && (i < 16); ++i) {
+      int num = rotation * 2 + (count / 2);
+      if (count % 2 == 0) {
+        row = bitshiftRotate(topCol(s[typeShape][num]), shift, shift);
+      } else {
+        row = bitshiftRotate(bottomCol(s[typeShape][num]), shift, shift);
+      }
+      if (row & background[i] != 0) {
+        canRotate = 0;
+        break;
+      }
+      ++count;
     }
-    ++count;
+
+    count = 0;
+    //if can rotate, then change shape[i]
+    if (canRotate == 1) {
+      for (int i = y - 1; (i <= y + 2) && (i < 16); ++i) {
+        int num = rotation * 2 + (count / 2);
+        if (count % 2 == 0) {
+          shape[i] = bitshiftRotate(topCol(s[typeShape][num]), shift, shift);
+        } else {
+          shape[i] = bitshiftRotate(bottomCol(s[typeShape][num]), shift, shift);
+        }
+        ++count;
+      }
+    }
   }
 }
 
@@ -158,8 +186,8 @@ byte bitshiftRotate(byte row, int howmuch, int leftOrRight) {
     return row;
   }
   int shifty = howmuch;
-  if(howmuch<0)
-    shifty = shifty *-1;
+  if (howmuch < 0)
+    shifty = shifty * -1;
   for (int i = 0; i < shifty; ++i) {
     //left shift
     if (leftOrRight < 0) {
@@ -174,7 +202,7 @@ byte bitshiftRotate(byte row, int howmuch, int leftOrRight) {
 
 
 void generateShape () {
-  int rand = random(0, 7);
+  int rand = 5;//random(0, 7);
   int orientation = random(0, 4);
   shape[0] = topCol(s[rand][orientation * 2]);
   shape[1] = bottomCol(s[rand][orientation * 2]);
@@ -184,7 +212,7 @@ void generateShape () {
   y = 1;
   rotation  = orientation;
   typeShape = rand;
-  Serial.print("generated");
+  Serial.print("generated\n");
 }
 
 byte topCol (byte rShape) {
@@ -286,6 +314,7 @@ void placeShape() {
   }
 }
 void clearRows() {
+  int rowsCleared = 0;
   for (int i = 15; i >= 0; --i) {
     if (background[i] == B11111111)
     {
@@ -295,24 +324,24 @@ void clearRows() {
       }
       ++i;
       background[0] = 0;
-      player_score++;
+      ++rowsCleared;
+      Serial.print("incremented rowsCleared\n");
     }
+  }
+  addScore(rowsCleared);
+}
+void addScore(int rowsCleared){
+  if(rowsCleared == 1){
+    player_score += 1;
+  }else if(rowsCleared == 2){
+    player_score +=2;
+  }else if(rowsCleared ==3){
+    player_score += 6;
+  }else if(rowsCleared == 4){
+    player_score += 24;
   }
 }
 
-
-/*for (int i = 15; i >= 0; --i) {
-  if (background[i] == B11111111)
-  {
-    for (int k = i; k > 0; k--) //moves the rows above cleard line down
-    {
-      background[k] = background[k - 1];
-    }
-    background[0] = 0;
-    player_score++;
-  }
-  }
-  }*/
 //clears the shape matrix and places the newly generated shape at the begining of the shape matrix
 //should call random generate shape function and change the shape
 void Place_Shape()
@@ -324,7 +353,7 @@ void Place_Shape()
     placeShape();
     clearRows();
     wipeShapeMatrix();
-    Serial.print("place_shape called");
+    Serial.print("place_shape called\n");
     if (background[0] == B00000000 || background[1] == B00000000)
     {
       generateShape();
@@ -359,17 +388,17 @@ void loop() {
     }
     if (moveFasterState == LOW) {
       moveDown();
-      }
-      else {
+    }
+    else {
       if (counter % 5 == 0) {
         moveDown();
       }
-      }
+    }
     if (rotateButtonState == LOW) {
       rotate();
     }
     Place_Shape();
-
+    
     counter ++;
   }
   wipeGameMatrix();
