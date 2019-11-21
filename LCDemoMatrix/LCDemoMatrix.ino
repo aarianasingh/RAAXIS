@@ -4,6 +4,8 @@ const int rightButton = 7;
 const int leftButton = 6;
 const int rotateButton = 5;
 const int moveFaster = 4;
+const int placeSelectedShape = 1;
+const int loopShape = 2;
 /*
   Now we need a LedControl to work with.
  ***** These pin numbers will probably not work with your hardware *****
@@ -25,9 +27,14 @@ LedControl lc = LedControl(12, 11, 10, 4);
 unsigned long delaytime = 500;
 int player_score = 0; //keeps track of the players score
 int x = 0, y = 0, rotation = 0, typeShape = 0;
+int canChooseShape = 0;
+int displayingShape = 0;
+int timer = 0;
 byte game_state = 1; //check if game is over
 byte shape[17], background[17];
 byte s[7][8];
+int choose[2];
+
 
 void setup() {
   /*
@@ -49,6 +56,8 @@ void setup() {
   pinMode (leftButton, INPUT);
   pinMode (rotateButton, INPUT);
   pinMode (moveFaster, INPUT);
+  pinMode (loopShape, INPUT);
+  pinMode (placeSelectedShape, INPUT);
 
 
   //shape initialization
@@ -56,6 +65,8 @@ void setup() {
     shape[i] = 0;
     background[i] = 0;
   }
+  choose[0] = 1;
+  choose[1] = 3;
   //0 is top of the screen, set shape at top
   shape[0] = B00110000;
   shape[1] = B00110000;
@@ -202,7 +213,7 @@ byte bitshiftRotate(byte row, int howmuch, int leftOrRight) {
 
 
 void generateShape () {
-  int rand = 5;//random(0, 7);
+  int rand = random(0, 7);
   int orientation = random(0, 4);
   shape[0] = topCol(s[rand][orientation * 2]);
   shape[1] = bottomCol(s[rand][orientation * 2]);
@@ -235,6 +246,41 @@ void updateGraphics() {
       lc.setColumn(i, j, b);
     }
   }
+}
+void displayShapes() {
+  byte random_shape[4];
+  ++displayingShape;
+  displayingShape %= 2;
+  random_shape[0] = topCol(s[choose[displayingShape]][0]);
+  random_shape[1] = bottomCol(s[choose[displayingShape]][0]);
+  random_shape[2] = topCol(s[choose[displayingShape]][1]);
+  random_shape[3] = bottomCol(s[choose[displayingShape]][1]);
+  int i = 0, k = 0; //shows the randomly generated shape on the player 2 interface
+  for (int j = 5; j >= 2; --j) {
+    lc.setColumn(i, j, random_shape[k]);
+    k++;
+  }
+}
+void genChooseShapes() {
+  choose[0] = random(0, 7);
+  int num = random(0, 7);
+  while (num == choose[0]) {
+    num = random(0, 7);
+  }
+  choose[1] = num;
+}
+
+void placeChosenShape() {
+  shape[0] = topCol(s[choose[displayingShape]][0]);
+  shape[1] = bottomCol(s[choose[displayingShape]][0]);
+  shape[2] = topCol(s[choose[displayingShape]][1]);
+  shape[3] = bottomCol(s[choose[displayingShape]][1]);
+  x = 3;
+  y = 1;
+  rotation  = 0;
+  typeShape = choose[displayingShape];
+  canChooseShape == 0;
+  Serial.print("generated\n");
 }
 void moveDown() {
   for (int i = 15; i > 0; --i) {
@@ -308,6 +354,12 @@ bool bottomDetection() {
   }
   return 1;
 }
+void wipeChooseShape() {
+  int i = 0;
+  for (int j = 0; j < 8 ; ++j) {
+    lc.setColumn(i, j, B00000000);
+  }
+}
 void placeShape() {
   for (int i = 15; i >= 0; --i) {
     background[i] = background[i] | shape[i];
@@ -330,14 +382,14 @@ void clearRows() {
   }
   addScore(rowsCleared);
 }
-void addScore(int rowsCleared){
-  if(rowsCleared == 1){
+void addScore(int rowsCleared) {
+  if (rowsCleared == 1) {
     player_score += 1;
-  }else if(rowsCleared == 2){
-    player_score +=2;
-  }else if(rowsCleared ==3){
+  } else if (rowsCleared == 2) {
+    player_score += 2;
+  } else if (rowsCleared == 3) {
     player_score += 6;
-  }else if(rowsCleared == 4){
+  } else if (rowsCleared == 4) {
     player_score += 24;
   }
 }
@@ -346,7 +398,6 @@ void addScore(int rowsCleared){
 //should call random generate shape function and change the shape
 void Place_Shape()
 {
-
   bool check_place_shape = bottomDetection();
   if (check_place_shape == 0)
   {
@@ -356,7 +407,12 @@ void Place_Shape()
     Serial.print("place_shape called\n");
     if (background[0] == B00000000 || background[1] == B00000000)
     {
-      generateShape();
+      //randomly generate two shapes
+      genChooseShapes();
+      //display them
+      displayShapes();
+      canChooseShape = 1;
+      timer = 0;
     }
     else {
       game_state = 0;
@@ -377,6 +433,8 @@ void loop() {
     int leftButtonState = digitalRead(leftButton);
     int rotateButtonState = digitalRead(rotateButton);
     int moveFasterState = digitalRead(moveFaster);
+    int loopShapeState = digitalRead(loopShape);
+    int placeSelectedShapeState = digitalRead(placeSelectedShape);
     Serial.begin(9600);
     if (rightButtonState == LOW) {
       //lc.setRow(0, 0, B10000000);
@@ -397,8 +455,24 @@ void loop() {
     if (rotateButtonState == LOW) {
       rotate();
     }
+    if (canChooseShape == 1) {
+      ++timer;
+      if (loopShapeState == LOW) {
+        displayShapes();
+      }
+      if (placeSelectedShapeState == LOW) {
+        placeChosenShape();
+        wipeChooseShape();
+      }
+      if (timer == 200) {
+        generateShape();
+        wipeChooseShape();
+        canChooseShape = 0;
+        timer = 0;
+      }
+    }
     Place_Shape();
-    
+
     counter ++;
   }
   wipeGameMatrix();
