@@ -1,3 +1,4 @@
+
 //We always have to include the library
 #include "LedControl.h"
 const int rightButton = 7;
@@ -6,6 +7,7 @@ const int rotateButton = 5;
 const int moveFaster = 4;
 const int placeSelectedShape = 1;
 const int loopShape = 2;
+const int startGame = 3;
 /*
   Now we need a LedControl to work with.
  ***** These pin numbers will probably not work with your hardware *****
@@ -32,7 +34,7 @@ int displayingShape = 0;
 int timer = 0;
 int timerIndex = 7;
 bool first = 1;
-byte game_state = 1; //check if game is over
+byte game_state = 2; //check if game is over
 byte shape[17], background[17];
 byte s[7][8];
 int choose[2];
@@ -60,6 +62,7 @@ void setup() {
   pinMode (moveFaster, INPUT);
   pinMode (loopShape, INPUT);
   pinMode (placeSelectedShape, INPUT);
+  pinMode (startGame, INPUT);
 
 
   //shape initialization
@@ -426,12 +429,22 @@ void Place_Shape()
       //lc.setColumn(0, 7, B11111111);
     }
     else {
-      game_state = 0;
+      game_state = 3;
       wipeGameMatrix();
       wipeChooseShape();
     }
   }
 }//end of method
+
+void startscreen() {
+
+  printR();
+  printA(1);
+  printA(2);
+  printX();
+
+
+}
 
 void loop() {
 
@@ -440,7 +453,22 @@ void loop() {
 
   int counter = 0;
 
-  while (game_state) {
+  while (game_state == 2) {
+
+    int startGameState = digitalRead(startGame);
+
+    startscreen();
+
+    if (startGameState == LOW) {
+      game_state = 1;
+      clearboard();
+      shape[0] = B00110000;
+      shape[1] = B00110000;
+    }
+
+  }
+
+  while (game_state == 1) {
     if (first == true) {
       displayScore(player_score);
     }
@@ -508,11 +536,33 @@ void loop() {
 
     counter ++;
   }
-  cleardigit(0);
-  cleardigit(4);
-  wipeGameMatrix();
-  wipeShapeMatrix();
-  updateGraphics();
+
+  clearboard();
+  displayScore(player_score);
+
+  while (game_state == 3) {
+
+    //clearboard();
+    //displayScore(player_score);
+
+    printG(2);
+    printG(3);
+    sadFace();
+
+    int restartGameState = digitalRead(startGame);
+
+    if (restartGameState == LOW) {
+      clearboard();
+      player_score = 0;
+      displayScore(player_score);
+      game_state = 1;
+      shape[0] = B00110000;
+      shape[1] = B00110000;
+      displayShapes();
+    }
+
+
+  }
 }
 //numbers to display!!!!!!!
 void zero(int startpos) {
@@ -685,6 +735,129 @@ void cleardigit (int startpos) {
   lc.setLed(1, 1 + startpos, 7, 0);
   lc.setLed(1, 1 + startpos, 5, 0);
   lc.setLed(1, 1 + startpos, 3, 0);
+}
+
+void printR ()
+{
+
+  lc.setLed(0, 2, 6, 1);
+  lc.setLed(0, 2, 5, 1);
+  lc.setLed(0, 2, 4, 1);
+  lc.setLed(0, 2, 3, 1);
+  lc.setLed(0, 2, 2, 1);
+  lc.setLed(0, 2, 1, 1);
+  lc.setLed(0, 2, 0, 1);
+
+  lc.setLed(0, 3, 6, 1);
+  lc.setLed(0, 3, 3, 1);
+  lc.setLed(0, 4, 6, 1);
+  lc.setLed(0, 4, 3, 1);
+  lc.setLed(0, 4, 2, 1);
+
+  lc.setLed(0, 5, 6, 1);
+  lc.setLed(0, 5, 5, 1);
+  lc.setLed(0, 5, 4, 1);
+  lc.setLed(0, 5, 3, 1);
+  lc.setLed(0, 5, 1, 1);
+  lc.setLed(0, 5, 0, 1);
+
+}
+
+void printA (int board)
+{
+
+  lc.setLed(board, 2, 6, 1);
+  lc.setLed(board, 2, 5, 1);
+  lc.setLed(board, 2, 4, 1);
+  lc.setLed(board, 2, 3, 1);
+  lc.setLed(board, 2, 2, 1);
+  lc.setLed(board, 2, 1, 1);
+  lc.setLed(board, 2, 0, 1);
+
+  lc.setLed(board, 3, 6, 1);
+  lc.setLed(board, 3, 3, 1);
+  lc.setLed(board, 4, 6, 1);
+  lc.setLed(board, 4, 3, 1);
+
+  lc.setLed(board, 5, 6, 1);
+  lc.setLed(board, 5, 5, 1);
+  lc.setLed(board, 5, 4, 1);
+  lc.setLed(board, 5, 2, 1);
+  lc.setLed(board, 5, 3, 1);
+  lc.setLed(board, 5, 1, 1);
+  lc.setLed(board, 5, 0, 1);
+
+}
+
+void printX ()
+{
+
+  lc.setLed(3, 2, 6, 1);
+  lc.setLed(3, 2, 5, 1);
+  lc.setLed(3, 2, 4, 1);
+  lc.setLed(3, 2, 2, 1);
+  lc.setLed(3, 2, 1, 1);
+  lc.setLed(3, 2, 0, 1);
+
+  lc.setLed(3, 5, 6, 1);
+  lc.setLed(3, 5, 5, 1);
+  lc.setLed(3, 5, 4, 1);
+  lc.setLed(3, 5, 2, 1);
+  lc.setLed(3, 5, 1, 1);
+  lc.setLed(3, 5, 0, 1);
+
+  lc.setLed(3, 3, 3, 1);
+  lc.setLed(3, 4, 3, 1);
+
+}
+
+void printG(int board) {
+
+  lc.setLed(board, 2, 6, 1);
+  lc.setLed(board, 2, 5, 1);
+  lc.setLed(board, 2, 4, 1);
+  lc.setLed(board, 2, 3, 1);
+  lc.setLed(board, 2, 2, 1);
+  lc.setLed(board, 2, 1, 1);
+
+  lc.setLed(board, 5, 6, 1);
+  lc.setLed(board, 5, 4, 1);
+  lc.setLed(board, 5, 3, 1);
+  lc.setLed(board, 5, 2, 1);
+  lc.setLed(board, 5, 1, 1);
+
+  lc.setLed(board, 3, 6, 1);
+  lc.setLed(board, 3, 1, 1);
+  lc.setLed(board, 4, 6, 1);
+  lc.setLed(board, 4, 4, 1);
+  lc.setLed(board, 4, 1, 1);
+
+}
+
+void sadFace() {
+
+  lc.setLed(0, 2, 5, 1);
+  lc.setLed(0, 2, 2, 1);
+  lc.setLed(0, 1, 1, 1);
+  lc.setLed(0, 3, 3, 1);
+  lc.setLed(0, 4, 3, 1);
+  lc.setLed(0, 5, 2, 1);
+  lc.setLed(0, 5, 5, 1);
+  lc.setLed(0, 6, 1, 1);
+
+}
+
+void clearboard() {
+
+  for (int i = 0; i < 8; i++) {
+
+    lc.setColumn(0, i, B00000000);
+    lc.setColumn(1, i, B00000000);
+    lc.setColumn(2, i, B00000000);
+    lc.setColumn(3, i, B00000000);
+
+  }
+
 }
 
 void displayScore(int score) {
