@@ -27,9 +27,11 @@ LedControl lc = LedControl(12, 11, 10, 4);
 unsigned long delaytime = 500;
 int player_score = 0; //keeps track of the players score
 int x = 0, y = 0, rotation = 0, typeShape = 0;
-int canChooseShape = 0;
+int canChooseShape = 1, isShapeChosen = 0, isInitialized = 0;
 int displayingShape = 0;
 int timer = 0;
+int timerIndex = 7;
+bool first = 1;
 byte game_state = 1; //check if game is over
 byte shape[17], background[17];
 byte s[7][8];
@@ -256,7 +258,7 @@ void displayShapes() {
   random_shape[2] = topCol(s[choose[displayingShape]][1]);
   random_shape[3] = bottomCol(s[choose[displayingShape]][1]);
   int i = 0, k = 0; //shows the randomly generated shape on the player 2 interface
-  for (int j = 5; j >= 2; --j) {
+  for (int j = 4; j >= 1; --j) {
     lc.setColumn(i, j, random_shape[k]);
     k++;
   }
@@ -381,16 +383,17 @@ void clearRows() {
     }
   }
   addScore(rowsCleared);
+  displayScore(player_score);
 }
 void addScore(int rowsCleared) {
   if (rowsCleared == 1) {
-    player_score += 1;
+    player_score += 8;
   } else if (rowsCleared == 2) {
-    player_score += 2;
+    player_score += 16;
   } else if (rowsCleared == 3) {
-    player_score += 6;
+    player_score += 48;
   } else if (rowsCleared == 4) {
-    player_score += 24;
+    player_score += 144;
   }
 }
 
@@ -398,6 +401,7 @@ void addScore(int rowsCleared) {
 //should call random generate shape function and change the shape
 void Place_Shape()
 {
+  first = 0;
   bool check_place_shape = bottomDetection();
   if (check_place_shape == 0)
   {
@@ -407,19 +411,28 @@ void Place_Shape()
     Serial.print("place_shape called\n");
     if (background[0] == B00000000 || background[1] == B00000000)
     {
-      //randomly generate two shapes
-      genChooseShapes();
-      //display them
-      displayShapes();
+      //  if (isShapeChosen == 1) {
+      placeChosenShape();
+      wipeChooseShape();
+      isShapeChosen = 0;
       canChooseShape = 1;
-      timer = 0;
+      isInitialized = 0;
+      lc.setColumn(0, 7, B00000000);
+      //} else {
+      // placeChosenShape();
+      // wipeChooseShape();
+      //}
+      //timer = 0;
+      //lc.setColumn(0, 7, B11111111);
     }
     else {
       game_state = 0;
       wipeGameMatrix();
+      wipeChooseShape();
     }
   }
 }//end of method
+
 void loop() {
 
   bool placed = true;
@@ -428,6 +441,9 @@ void loop() {
   int counter = 0;
 
   while (game_state) {
+    if (first == true) {
+      displayScore(player_score);
+    }
     updateGraphics();
     int rightButtonState = digitalRead(rightButton);
     int leftButtonState = digitalRead(leftButton);
@@ -456,26 +472,269 @@ void loop() {
       rotate();
     }
     if (canChooseShape == 1) {
-      ++timer;
+      //++timer;
+      if (isInitialized == 0) {
+        //randomly generate two shapes
+        genChooseShapes();
+        //display them
+        displayShapes();
+        isInitialized = 1;
+      }
       if (loopShapeState == LOW) {
         displayShapes();
       }
       if (placeSelectedShapeState == LOW) {
-        placeChosenShape();
-        wipeChooseShape();
+        //change display to indicate that shape was chosen
+        isShapeChosen = 1;
+        isInitialized = 0;
+        canChooseShape = 0;
+        lc.setColumn(0, 7, B11111111);
+        // timer = 0;
+        //timerIndex = 8;
+        //lc.setColumn(0, 7, B00000000);
       }
-      if (timer == 200) {
-        generateShape();
+      /*else if (timer == 45) {
+        placeChosenShape();
         wipeChooseShape();
         canChooseShape = 0;
         timer = 0;
-      }
+        lc.setColumn(0, 7, B00000000);
+        }else if (timer % 5 == 0) {
+        lc.setLed(0, timerIndex, 7, 0);
+        --timerIndex;
+        }*/
     }
     Place_Shape();
 
     counter ++;
   }
+  cleardigit(0);
+  cleardigit(4);
   wipeGameMatrix();
   wipeShapeMatrix();
   updateGraphics();
+}
+//numbers to display!!!!!!!
+void zero(int startpos) {
+
+  lc.setLed(1, 0 + startpos, 7, 1);
+  lc.setLed(1, 0 + startpos, 6, 1);
+  lc.setLed(1, 0 + startpos, 5, 1);
+  lc.setLed(1, 0 + startpos, 4, 1);
+  lc.setLed(1, 0 + startpos, 3, 1);
+  lc.setLed(1, 2 + startpos, 7, 1);
+  lc.setLed(1, 2 + startpos, 6, 1);
+  lc.setLed(1, 2 + startpos, 5, 1);
+  lc.setLed(1, 2 + startpos, 4, 1);
+  lc.setLed(1, 2 + startpos, 3, 1);
+  lc.setLed(1, 1 + startpos, 7, 1);
+  lc.setLed(1, 1 + startpos, 3, 1);
+
+}
+
+void one(int startpos) {
+
+  lc.setLed(1, 2 + startpos, 7, 1);
+  lc.setLed(1, 2 + startpos, 6, 1);
+  lc.setLed(1, 2 + startpos, 5, 1);
+  lc.setLed(1, 2 + startpos, 4, 1);
+  lc.setLed(1, 2 + startpos, 3, 1);
+
+}
+
+
+void two(int startpos) {
+
+  lc.setLed(1, 0 + startpos, 7, 1);
+  lc.setLed(1, 0 + startpos, 5, 1);
+  lc.setLed(1, 0 + startpos, 4, 1);
+  lc.setLed(1, 0 + startpos, 3, 1);
+  lc.setLed(1, 2 + startpos, 7, 1);
+  lc.setLed(1, 2 + startpos, 6, 1);
+  lc.setLed(1, 2 + startpos, 5, 1);
+  lc.setLed(1, 2 + startpos, 3, 1);
+  lc.setLed(1, 1 + startpos, 7, 1);
+  lc.setLed(1, 1 + startpos, 5, 1);
+  lc.setLed(1, 1 + startpos, 3, 1);
+
+}
+
+void three(int startpos) {
+
+  lc.setLed(1, 0 + startpos, 7, 1);
+  lc.setLed(1, 0 + startpos, 5, 1);
+  lc.setLed(1, 0 + startpos, 3, 1);
+  lc.setLed(1, 2 + startpos, 7, 1);
+  lc.setLed(1, 2 + startpos, 6, 1);
+  lc.setLed(1, 2 + startpos, 5, 1);
+  lc.setLed(1, 2 + startpos, 4, 1);
+  lc.setLed(1, 2 + startpos, 3, 1);
+  lc.setLed(1, 1 + startpos, 7, 1);
+  lc.setLed(1, 1 + startpos, 5, 1);
+  lc.setLed(1, 1 + startpos, 3, 1);
+
+}
+
+void four(int startpos) {
+
+  lc.setLed(1, 0 + startpos, 7, 1);
+  lc.setLed(1, 0 + startpos, 6, 1);
+  lc.setLed(1, 0 + startpos, 5, 1);
+  lc.setLed(1, 2 + startpos, 7, 1);
+  lc.setLed(1, 2 + startpos, 6, 1);
+  lc.setLed(1, 2 + startpos, 5, 1);
+  lc.setLed(1, 2 + startpos, 4, 1);
+  lc.setLed(1, 2 + startpos, 3, 1);
+  lc.setLed(1, 1 + startpos, 5, 1);
+
+}
+
+void five(int startpos) {
+
+  lc.setLed(1, 0 + startpos, 7, 1);
+  lc.setLed(1, 0 + startpos, 6, 1);
+  lc.setLed(1, 0 + startpos, 5, 1);
+  lc.setLed(1, 0 + startpos, 3, 1);
+  lc.setLed(1, 2 + startpos, 7, 1);
+  lc.setLed(1, 2 + startpos, 5, 1);
+  lc.setLed(1, 2 + startpos, 4, 1);
+  lc.setLed(1, 2 + startpos, 3, 1);
+  lc.setLed(1, 1 + startpos, 7, 1);
+  lc.setLed(1, 1 + startpos, 5, 1);
+  lc.setLed(1, 1 + startpos, 3, 1);
+
+}
+
+void six(int startpos) {
+
+  lc.setLed(1, 0 + startpos, 7, 1);
+  lc.setLed(1, 0 + startpos, 6, 1);
+  lc.setLed(1, 0 + startpos, 5, 1);
+  lc.setLed(1, 0 + startpos, 4, 1);
+  lc.setLed(1, 0 + startpos, 3, 1);
+  lc.setLed(1, 2 + startpos, 7, 1);
+  lc.setLed(1, 2 + startpos, 5, 1);
+  lc.setLed(1, 2 + startpos, 4, 1);
+  lc.setLed(1, 2 + startpos, 3, 1);
+  lc.setLed(1, 1 + startpos, 7, 1);
+  lc.setLed(1, 1 + startpos, 5, 1);
+  lc.setLed(1, 1 + startpos, 3, 1);
+
+}
+
+void seven(int startpos) {
+
+  lc.setLed(1, 0 + startpos, 7, 1);
+  lc.setLed(1, 0 + startpos, 6, 1);
+  lc.setLed(1, 1 + startpos, 7, 1);
+  lc.setLed(1, 2 + startpos, 7, 1);
+  lc.setLed(1, 2 + startpos, 6, 1);
+  lc.setLed(1, 2 + startpos, 5, 1);
+  lc.setLed(1, 2 + startpos, 4, 1);
+  lc.setLed(1, 2 + startpos, 3, 1);
+
+}
+
+void eight(int startpos) {
+
+  lc.setLed(1, 0 + startpos, 7, 1);
+  lc.setLed(1, 0 + startpos, 6, 1);
+  lc.setLed(1, 0 + startpos, 5, 1);
+  lc.setLed(1, 0 + startpos, 4, 1);
+  lc.setLed(1, 0 + startpos, 3, 1);
+  lc.setLed(1, 2 + startpos, 7, 1);
+  lc.setLed(1, 2 + startpos, 6, 1);
+  lc.setLed(1, 2 + startpos, 5, 1);
+  lc.setLed(1, 2 + startpos, 4, 1);
+  lc.setLed(1, 2 + startpos, 3, 1);
+  lc.setLed(1, 1 + startpos, 7, 1);
+  lc.setLed(1, 1 + startpos, 5, 1);
+  lc.setLed(1, 1 + startpos, 3, 1);
+
+}
+
+void nine(int startpos) {
+
+  lc.setLed(1, 0 + startpos, 7, 1);
+  lc.setLed(1, 0 + startpos, 6, 1);
+  lc.setLed(1, 0 + startpos, 5, 1);
+  lc.setLed(1, 0 + startpos, 3, 1);
+  lc.setLed(1, 2 + startpos, 7, 1);
+  lc.setLed(1, 2 + startpos, 6, 1);
+  lc.setLed(1, 2 + startpos, 5, 1);
+  lc.setLed(1, 2 + startpos, 4, 1);
+  lc.setLed(1, 2 + startpos, 3, 1);
+  lc.setLed(1, 1 + startpos, 7, 1);
+  lc.setLed(1, 1 + startpos, 5, 1);
+  lc.setLed(1, 1 + startpos, 3, 1);
+
+}
+
+void cleardigit (int startpos) {
+
+  lc.setLed(1, 0 + startpos, 7, 0);
+  lc.setLed(1, 0 + startpos, 6, 0);
+  lc.setLed(1, 0 + startpos, 5, 0);
+  lc.setLed(1, 0 + startpos, 4, 0);
+  lc.setLed(1, 0 + startpos, 3, 0);
+  lc.setLed(1, 2 + startpos, 7, 0);
+  lc.setLed(1, 2 + startpos, 6, 0);
+  lc.setLed(1, 2 + startpos, 5, 0);
+  lc.setLed(1, 2 + startpos, 4, 0);
+  lc.setLed(1, 2 + startpos, 3, 0);
+  lc.setLed(1, 1 + startpos, 7, 0);
+  lc.setLed(1, 1 + startpos, 5, 0);
+  lc.setLed(1, 1 + startpos, 3, 0);
+}
+
+void displayScore(int score) {
+
+  int ones = score % 10;
+  int tens = (score % 100) / 10;
+
+  switch (ones) {
+
+    case 0: cleardigit(4); zero(4); break;
+    case 1: cleardigit(4); one(4); break;
+    case 2: cleardigit(4); two(4); break;
+    case 3: cleardigit(4); three(4); break;
+    case 4: cleardigit(4); four(4); break;
+    case 5: cleardigit(4); five(4); break;
+    case 6: cleardigit(4); six(4); break;
+    case 7: cleardigit(4); seven(4); break;
+    case 8: cleardigit(4); eight(4); break;
+    case 9: cleardigit(4); nine(4); break;
+  }
+
+  switch (tens) {
+
+    case 0: cleardigit(0); zero(0); break;
+    case 1: cleardigit(0); one(0); break;
+    case 2: cleardigit(0); two(0); break;
+    case 3: cleardigit(0); three(0); break;
+    case 4: cleardigit(0); four(0); break;
+    case 5: cleardigit(0); five(0); break;
+    case 6: cleardigit(0); six(0); break;
+    case 7: cleardigit(0); seven(0); break;
+    case 8: cleardigit(0); eight(0); break;
+    case 9: cleardigit(0); nine(0); break;
+  }
+
+  int hundred = (score % 1000) / 100;
+
+  if (hundred > 8) {
+
+    lc.setColumn(1, 1, B11111111);
+    hundred -= 8;
+
+    for (int i = 0; i < hundred; i++) {
+
+      lc.setLed(1, i, 0, 1);
+    }
+  }
+  else {
+    for (int i = 0; i < hundred; i++) {
+      lc.setLed(1, i, 1, 1);
+    }
+  }
 }
