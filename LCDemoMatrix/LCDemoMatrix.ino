@@ -38,6 +38,7 @@ byte game_state = 2; //check if game is over
 byte shape[17], background[17];
 byte s[7][8];
 int choose[2];
+int counter3 = 0;
 
 
 void setup() {
@@ -452,6 +453,7 @@ void loop() {
   lc.setRow(0, 0, B00000000);
 
   int counter = 0;
+  int counter2 = 0;
 
   while (game_state == 2) {
 
@@ -460,11 +462,38 @@ void loop() {
     startscreen();
 
     if (startGameState == LOW) {
+      game_state = 5;
+
+    }
+
+  }
+
+  clearboard();
+
+
+  while (game_state == 5) {
+
+    p(0);
+    secondone();
+    p(3);
+    secondtwo(5);
+
+    countdown(counter2);
+    if (counter2 > 40) {
+
       game_state = 1;
       clearboard();
+      if (counter3 > 0) {
+        displayShapes();
+      }
+      displayScore(player_score);
       shape[0] = B00110000;
       shape[1] = B00110000;
+
     }
+
+    counter2++;
+
 
   }
 
@@ -552,13 +581,14 @@ void loop() {
     int restartGameState = digitalRead(startGame);
 
     if (restartGameState == LOW) {
+      counter3++;
       clearboard();
       player_score = 0;
-      displayScore(player_score);
-      game_state = 1;
-      shape[0] = B00110000;
-      shape[1] = B00110000;
-      displayShapes();
+      //displayScore(player_score);
+      game_state = 5;
+      //shape[0] = B00110000;
+      //shape[1] = B00110000;
+      //displayShapes();
     }
 
 
@@ -589,6 +619,105 @@ void one(int startpos) {
   lc.setLed(1, 2 + startpos, 5, 1);
   lc.setLed(1, 2 + startpos, 4, 1);
   lc.setLed(1, 2 + startpos, 3, 1);
+
+}
+
+void secondone() {
+
+  lc.setLed(0, 5, 7 - 1, 1);
+  lc.setLed(0, 5, 6 - 1, 1);
+  lc.setLed(0, 5, 5 - 1, 1);
+  lc.setLed(0, 5, 4 - 1, 1);
+  lc.setLed(0, 5, 3 - 1, 1);
+  //lc.setLed(0, 5, 2-1, 1);
+
+}
+
+void secondtwo(int startpos) {
+
+  lc.setLed(3, 5, 7 - 1, 1);
+  lc.setLed(3, 5, 6 - 1, 1);
+  lc.setLed(3, 5, 5 - 1, 1);
+  lc.setLed(3, 5, 4 - 1, 1);
+  lc.setLed(3, 5, 3 - 1, 1);
+  lc.setLed(3, 6, 7 - 1, 1);
+  lc.setLed(3, 6, 6 - 1, 1);
+  lc.setLed(3, 6, 5 - 1, 1);
+  lc.setLed(3, 6, 4 - 1, 1);
+  lc.setLed(3, 6, 3 - 1, 1);
+
+}
+
+void countdown(int p) {
+
+  if (p > 10) {
+
+    lc.setLed(1, 2, 6, 1);
+    lc.setLed(1, 2, 5, 1);
+    lc.setLed(1, 2, 4, 1);
+    lc.setLed(1, 2, 3, 1);
+    lc.setLed(1, 3, 6, 1);
+    lc.setLed(1, 3, 5, 1);
+    lc.setLed(1, 3, 4, 1);
+    lc.setLed(1, 3, 3, 1);
+    lc.setLed(1, 4, 6, 1);
+    lc.setLed(1, 4, 5, 1);
+    lc.setLed(1, 4, 4, 1);
+    lc.setLed(1, 4, 3, 1);
+    lc.setLed(1, 5, 6, 1);
+    lc.setLed(1, 5, 5, 1);
+    lc.setLed(1, 5, 4, 1);
+    lc.setLed(1, 5, 3, 1);
+
+
+
+  }
+
+  if (p > 20) {
+
+    lc.setLed(1, 2, 1, 1);
+    lc.setLed(1, 2, 0, 1);
+    lc.setLed(2, 2, 7, 1);
+    lc.setLed(2, 2, 6, 1);
+    lc.setLed(1, 3, 1, 1);
+    lc.setLed(1, 3, 0, 1);
+    lc.setLed(2, 3, 7, 1);
+    lc.setLed(2, 3, 6, 1);
+    lc.setLed(1, 4, 1, 1);
+    lc.setLed(1, 4, 0, 1);
+    lc.setLed(2, 4, 7, 1);
+    lc.setLed(2, 4, 6, 1);
+    lc.setLed(1, 5, 1, 1);
+    lc.setLed(1, 5, 0, 1);
+    lc.setLed(2, 5, 7, 1);
+    lc.setLed(2, 5, 6, 1);
+
+
+
+  }
+
+  if (p > 30) {
+
+    lc.setLed(2, 2, 4, 1);
+    lc.setLed(2, 2, 3, 1);
+    lc.setLed(2, 2, 2, 1);
+    lc.setLed(2, 2, 1, 1);
+    lc.setLed(2, 3, 4, 1);
+    lc.setLed(2, 3, 3, 1);
+    lc.setLed(2, 3, 2, 1);
+    lc.setLed(2, 3, 1, 1);
+    lc.setLed(2, 4, 4, 1);
+    lc.setLed(2, 4, 3, 1);
+    lc.setLed(2, 4, 2, 1);
+    lc.setLed(2, 4, 1, 1);
+    lc.setLed(2, 5, 4, 1);
+    lc.setLed(2, 5, 3, 1);
+    lc.setLed(2, 5, 2, 1);
+    lc.setLed(2, 5, 1, 1);
+
+
+
+  }
 
 }
 
@@ -844,6 +973,24 @@ void sadFace() {
   lc.setLed(0, 5, 2, 1);
   lc.setLed(0, 5, 5, 1);
   lc.setLed(0, 6, 1, 1);
+
+}
+
+void p(int board) {
+
+  lc.setLed(board, 1, 6, 1);
+  lc.setLed(board, 1, 5, 1);
+  lc.setLed(board, 1, 4, 1);
+  lc.setLed(board, 1, 3, 1);
+  lc.setLed(board, 1, 2, 1);
+  //lc.setLed(board, 1, 1, 1);
+  lc.setLed(board, 2, 6, 1);
+  lc.setLed(board, 2, 4, 1);
+  lc.setLed(board, 3, 6, 1);
+  lc.setLed(board, 3, 5, 1);
+  lc.setLed(board, 3, 4, 1);
+
+
 
 }
 
